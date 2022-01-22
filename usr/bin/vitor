@@ -134,11 +134,11 @@ check_tor_user(){
   tor_command="tor --verify-config -f ${file_name_tmp}"
   tor_user_check="$(grep "^User" "${1}" | sed "s/^User //")"
   if [ -n "${tor_user_check}" ]; then
-    #tor_config_parsed="$(${tor_command})"
     # shellcheck disable=SC2086
     case "${su_cmd}" in
       su) tor_config_parsed="$(${su_cmd} -s /bin/sh -c "${tor_command}")";;
       sudo|doas) tor_config_parsed="$(${su_cmd} ${tor_command})";;
+      "") tor_config_parsed="$(${tor_command})";;
     esac
   else
     if [ -n "${tor_user}" ]; then
@@ -146,6 +146,7 @@ check_tor_user(){
       case "${su_cmd}" in
         su) tor_config_parsed="$(${su_cmd} ${tor_user} -s /bin/sh -c "${tor_command}")";;
         sudo|doas) tor_config_parsed="$(${su_cmd} -u ${tor_user} -- ${tor_command})";;
+        "") error_msg "Tor user not set on the configuration file and not possible to execute commands as another user as neither 'su', 'sudo' or 'doas' are installed";;
       esac
     else
       notice "You probably commented or deleted the \"User\" option, therefore disabling it."
