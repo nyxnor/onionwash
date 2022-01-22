@@ -4,6 +4,7 @@ me="${0##*/}"
 toplevel="$(git rev-parse --show-toplevel)"
 script_name="vitor"
 script_version="$("${toplevel}/usr/bin/${script_name}" -V)"
+requirements="toraasdas m4"
 
 error_msg(){
   printf %s"${me}: ${1}\n" >&2
@@ -30,9 +31,17 @@ Developer:
   exit 1
 }
 
-case "${1}" in
+has() {
+  _cmd=$(command -v "$1") 2>/dev/null || return 1
+  [ -x "$_cmd" ] || return 1
+}
 
+case "${1}" in
   install)
+    for item in ${requirements}; do
+      has "${item}" || miss_dep="${miss_dep} ${item}"
+    done
+    [ -n "${miss_dep}" ] && error_msg "missing dependency(ies): ${miss_dep}"
     [ "$(id -u)" -ne 0 ] && error_msg "${1} as root"
     for file in "${toplevel}"/usr/bin/*; do
       [ -f "${file}" ] && cp "${file}" /usr/bin/
