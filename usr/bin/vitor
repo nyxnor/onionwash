@@ -11,6 +11,8 @@
 file_mode="644"
 me="${0##*/}"
 
+[ "$(id -u)" -eq 0 ] && is_root=1
+
 ## colors
 #nocolor="\033[0m"
 #bold="\033[1m"
@@ -110,6 +112,7 @@ file_name="$(printf %s"${file##*/}" | tr "." "_" | tr "-" "_")"
 command -v m4 >/dev/null || error_msg "Dependency missing: m4"
 file_name_tmp="$(printf %s"mkstemp(${file_dir}/${file_name}.XXXXXX)" | m4)"
 chmod "${file_mode}" "${file_name_tmp}"
+[ -f "${file}" ] && cp -p "${file}" "${file_name_tmp}"
 
 file_locked="${file}.lck"
 ## test if file is already in use.
@@ -120,43 +123,48 @@ else
   error_msg "${file} is busy, try again later."
 fi
 
-if [ -f "${file}" ]; then
-  [ ! -r "${file}" ] && error_msg "${file} is not readable."
-  [ ! -w "${file}" ] && error_msg "${file} is not writable."
-  cp -p "${file}" "${file_name_tmp}"
-fi
-
 while :; do
+  [ "${is_root}" -eq 1 ] && has su && su_cmd="su" && break
   has sudo && su_cmd="sudo" && break
   has doas && su_cmd="doas" && break
   break
 done
 
 check_tor_user(){
+  tor_command="tor --verify-config -f ${file_name_tmp}"
   tor_user_check="$(grep "^User" "${1}" | sed "s/^User //")"
   if [ -n "${tor_user_check}" ]; then
-    su_tor_cmd="${su_cmd}"
+    #tor_config_parsed="$(${tor_command})"
+    # shellcheck disable=SC2086
+    case "${su_cmd}" in
+      su) tor_config_parsed="$(${su_cmd} -s /bin/sh -c "${tor_command}")";;
+      sudo|doas) tor_config_parsed="$(${su_cmd} ${tor_command})";;
+    esac
   else
-    if [ -z "${tor_user}" ]; then
+    if [ -n "${tor_user}" ]; then
+      # shellcheck disable=SC2086
+      case "${su_cmd}" in
+        su) tor_config_parsed="$(${su_cmd} ${tor_user} -s /bin/sh -c "${tor_command}")";;
+        sudo|doas) tor_config_parsed="$(${su_cmd} -u ${tor_user} -- ${tor_command})";;
+      esac
+    else
       notice "You probably commented or deleted the \"User\" option, therefore disabling it."
       notice "but you can only do that if you specify the tor user."
       notice "If that is what you want, exit and run:"
       notice "$ ${me} -u tor_user"
-    else
-      su_tor_cmd="${su_cmd} -u ${tor_user}"
     fi
   fi
 }
 
 tor_verify_config(){
-  tor_config_parsed="$(${su_tor_cmd} tor --verify-config -f "${file_name_tmp}")"
   ## tor configuration can still be valid if only warnings are received. example:
   ##  [warn] Tor was compiled with zstd 1.3.8, but is running with zstd 1.4.8. For safety, we'll avoid using advanced zstd functionality.
   ##  [warn] ControlPort is open, but no authentication method has been configured.  This means that any program on your computer can reconfigure your Tor.  That's bad!  You should upgrade your Tor controller as soon as possible.
   ##  Configuration was valid
+  ## this is why we are not using hush, because it wouldn't grep the last line that
   tor_config_valid=0
   printf '%s\n' "${tor_config_parsed}" | tail -n 1 | grep -q "^Configuration was valid" && tor_config_valid=1
-  tor_config_parsed="$(printf '%s\n' "${tor_config_parsed}" | cut -d " " -f4- | grep -e "^\[warn\]" -e "^\[err\]")"
+  tor_config_parsed="$(printf '%s\n' "${tor_config_parsed}" | grep -e "\[warn\]" -e "\[err\]" -e "Configuration was valid" | grep -v "\[warn\] Tor was compiled with")"
 }
 
 ## open temporary file to be edited
@@ -165,8 +173,9 @@ check_tor_user "${file_name_tmp}"
 
 ## while the config is not ok, loop to enter and continue to edit or signal to interrupt.
 tor_verify_config
-while [ -n "${tor_config_parsed}" ]; do
+while printf '%s\n' "${tor_config_parsed}" | grep -q "\[warn\]"; do
   printf '%s\n' "${tor_config_parsed}" | while IFS="$(printf '\n')" read -r line || [ -n "${line}" ]; do
+    printf '%s\n' "${line}" | grep -q -e "\[warn\]" -e "\[err\]" && line="$(printf '%s\n' "${line}" | cut -d " " -f4-)"
     printf '%s\n' "tor: ${line}"
   done
   if [ ${tor_config_valid} -eq 1 ]; then
@@ -183,7 +192,7 @@ while [ -n "${tor_config_parsed}" ]; do
     # shellcheck disable=SC2034
     read -r status
     case "${status}" in
-      e|E) printf '\n'; break;;
+      e|E) notice "${file} will be edited again"; break;;
       x|X) notice "${file} unchanged"; exit;;
       Q) ! cmp -s "${file_name_tmp}" "${file}" && cp -p "${file_name_tmp}" "${file}" && notice "${file} updated" && exit 0;;
     esac
@@ -191,6 +200,7 @@ while [ -n "${tor_config_parsed}" ]; do
   "${vitor_editor}" "${file_name_tmp}" || true
   check_tor_user "${file_name_tmp}"
   tor_verify_config
+  printf '\n'
 done
 
 ! cmp -s "${file_name_tmp}" "${file}" && cp -p "${file_name_tmp}" "${file}" && notice "${file} updated" && exit 0
