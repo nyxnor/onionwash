@@ -148,8 +148,15 @@ check_tor_user(){
   fi
 }
 
-tor_verify_config_mod(){
-  tor_config_parsed="$(${su_tor_cmd} tor --verify-config --hush -f "${file_name_tmp}" | cut -d " " -f4-)"
+tor_verify_config(){
+  tor_config_parsed="$(${su_tor_cmd} tor --verify-config -f "${file_name_tmp}")"
+  ## tor configuration can still be valid if only warnings are received. example:
+  ##  [warn] Tor was compiled with zstd 1.3.8, but is running with zstd 1.4.8. For safety, we'll avoid using advanced zstd functionality.
+  ##  [warn] ControlPort is open, but no authentication method has been configured.  This means that any program on your computer can reconfigure your Tor.  That's bad!  You should upgrade your Tor controller as soon as possible.
+  ##  Configuration was valid
+  tor_config_valid=0
+  printf '%s\n' "${tor_config_parsed}" | tail -n 1 | grep -q "^Configuration was valid" && tor_config_valid=1
+  tor_config_parsed="$(printf '%s\n' "${tor_config_parsed}" | cut -d " " -f4- | grep -e "^\[warn\]" -e "^\[err\]")"
 }
 
 ## open temporary file to be edited
@@ -157,12 +164,16 @@ tor_verify_config_mod(){
 check_tor_user "${file_name_tmp}"
 
 ## while the config is not ok, loop to enter and continue to edit or signal to interrupt.
-tor_verify_config_mod
+tor_verify_config
 while [ -n "${tor_config_parsed}" ]; do
   printf '%s\n' "${tor_config_parsed}" | while IFS="$(printf '\n')" read -r line || [ -n "${line}" ]; do
     printf '%s\n' "tor: ${line}"
   done
-  notice "The temporary copy on ${file_name_tmp} is not a valid configuration."
+  if [ ${tor_config_valid} -eq 1 ]; then
+    notice "${file_name_tmp} is a valid configuration but warnings were received."
+  else
+    notice "${file_name_tmp} is not a valid configuration."
+  fi
   notice "Options are:"
   notice "  (e)enter to edit again."
   notice "  e(x)it without saving changes."
@@ -179,7 +190,7 @@ while [ -n "${tor_config_parsed}" ]; do
   done
   "${vitor_editor}" "${file_name_tmp}" || true
   check_tor_user "${file_name_tmp}"
-  tor_verify_config_mod
+  tor_verify_config
 done
 
 ! cmp -s "${file_name_tmp}" "${file}" && cp -p "${file_name_tmp}" "${file}" && notice "${file} updated" && exit 0
