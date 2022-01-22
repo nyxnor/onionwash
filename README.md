@@ -59,7 +59,7 @@ debian/debhelper-build-stamp debian/vitor
 
 Delete debhelper artifacts from the parent folder (including the .deb file):
 ```sh
-sudo rm -f ../tor-ctrl_*.deb ../tor-ctrl_*.buildinfo ../tor-ctrl_*.changes
+sudo rm -f ../vitor_*.deb ../vitor_*.buildinfo ../vitor_*.changes
 ```
 
 ## Usage
