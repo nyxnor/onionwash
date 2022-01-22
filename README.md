@@ -25,7 +25,7 @@ sudo ./configure.sh install
 
 Install developer scripts:
 ```sh
-sudo apt install -y devscripts
+sudo apt install -y devscripts equivs
 ```
 
 Install build dependencies.
