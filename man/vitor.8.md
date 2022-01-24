@@ -68,6 +68,10 @@ Edit an alternative configuration file (note *-f* is not needed if the file is t
 vitor -u debian-tor /usr/local/etc/tor/torrc.d/50_user.conf
 ```
 
+# BUGS
+
+Cannot add, modify "User" option from the tor configuration file, requires fix, please report on https://github.com/nyxnor/vitor/issues if you need this feature.
+
 # SEE ALSO
 
 tor(1)

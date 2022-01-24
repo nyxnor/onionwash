@@ -4,7 +4,7 @@ me="${0##*/}"
 toplevel="$(git rev-parse --show-toplevel)"
 script_name="vitor"
 script_version="$("${toplevel}/usr/bin/${script_name}" -V)"
-requirements="toraasdas m4"
+requirements="tor m4"
 
 error_msg(){
   printf %s"${me}: ${1}\n" >&2
