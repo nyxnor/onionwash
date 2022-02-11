@@ -46,7 +46,7 @@ If that did not work, have a look in `debian/control` file and manually install 
 
 Build the package without signing it (not required for personal use) and install it.
 ```sh
-dpkg-buildpackage -b
+dpkg-buildpackage -b --no-sign
 ```
 
 #### Install the package
