@@ -2,23 +2,22 @@
 
 If you don't clean your onions, you might only see half of a worm after a bite.
 
-## onion-parser
+## onion-parser - parse tor configuration files elegantly
 
-Wrapper aroung tor option --verify config to parse configuration files and verify if they are valid.
+Wrapper aroung tor option `--verify config` to parse configuration files and verify if they are valid.
 
 Also shows the order the files were parsed and their options if being verbose.
 
-## vitor- safely edit tor configuration files
-
-[![demo](https://asciinema.org/a/463445.svg)](https://asciinema.org/a/463445?autoplay=1)
-
-### Architecture
+## vitor - safely edit tor configuration files
 
 Vitor is a Vi for tor configuration files to be edited in a save manner. It creates a copy of the file you wish to edit, lock the file from being edited in another instance.
 
 Then it selects the editor by looking the environment variables *SUDO_EDITOR*, *DOAS_EDITOR*, *VISUAL*, *EDITOR*. If all are empty, will try commonly used terminal editors that can be found as a command on your system.
 
 After the file is edited and the user exits the editor, tor verify its configuration file but only from the modified file, if invalid, give option to edit again, exit without saving or save with danger flag.
+
+
+[![demo](https://asciinema.org/a/463445.svg)](https://asciinema.org/a/463445?autoplay=1)
 
 ## Installation
 
