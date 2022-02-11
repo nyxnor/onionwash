@@ -2,9 +2,8 @@
 
 me="${0##*/}"
 toplevel="$(git rev-parse --show-toplevel)"
-script_name="vitor"
-script_version="$("${toplevel}/usr/bin/${script_name}" -V)"
-requirements="tor m4"
+package_name="onion-wash"
+requirements="tor"
 
 error_msg(){
   printf %s"${me}: ${1}\n" >&2
@@ -47,14 +46,20 @@ case "${1}" in
       [ -f "${file}" ] && cp "${file}" /usr/bin/
     done
     for mandir in "/usr/local/man/man8" "/usr/local/share/man/man8" "/usr/share/man/man8"; do
-      manual="${toplevel}/auto-generated-man-pages/${script_name}.8"
-      [ -d "${mandir}" ] && [ -f "${manual}" ] && cp "${manual}" "${mandir}" && break
+      if [ -d "${mandir}" ]; then
+        for man in "${toplevel}"/auto-generated-man-pages/*; do
+          manual="${toplevel}/auto-generated-man-pages/${man##*/}"
+          [ -f "${manual}" ] && cp "${manual}" "${mandir}" && break
+        done
+      fi
     done
   ;;
 
   remove)
     [ "$(id -u)" -ne 0 ] && error_msg "${1} as root"
-    rm -f "/usr/local/man/man8/${script_name}.8" "/usr/local/share/man/man8/${script_name}.8" "/usr/share/man/man8/${script_name}.8"
+    for file in "${toplevel}"/auto-generated-man-pages/*; do
+      rm -f "/usr/local/man/man8/${file##*/}" "/usr/local/share/man/man8/${file##*/}" "/usr/share/man/man8/${file##*/}"
+    done
     for file in "${toplevel}"/usr/bin/*; do
       [ -f "${file}" ] && rm -f "/usr/bin/${file##*/}" "/usr/local/bin/${file##*/}"
     done
@@ -69,22 +74,27 @@ case "${1}" in
 
   install-deb)
     [ "$(id -u)" -ne 0 ] && error_msg "${1} as root"
-    dpkg -i ../"${script_name}"_*.deb
+    dpkg -i ../"${package_name}"_*.deb
   ;;
 
   clean-deb)
     rm -rf -- *-build-deps_*.buildinfo *-build-deps_*.changes \
     debian/*.debhelper.log debian/*.substvars \
     debian/.debhelper debian/files \
-    debian/debhelper-build-stamp "debian/${script_name}" \
-    ../"${script_name}"_*.deb ../"${script_name}"_*.buildinfo ../"${script_name}"_*.changes
+    debian/debhelper-build-stamp "debian/${package_name}" \
+    ../"${package_name}"_*.deb ../"${package_name}"_*.buildinfo ../"${package_name}"_*.changes
   ;;
 
   man)
     command -v pandoc >/dev/null || error_msg "Install 'pandoc' to create manual pages"
     [ "$(id -u)" -eq 0 ] && printf '%s\n' "${me}: don't generate the manual as root" && exit 1
-    pandoc -s -f markdown-smart -V header="Tor System Manager's Manual" -V footer="${script_version}" -t man "${toplevel}/man/${script_name}.8.md" -o "${toplevel}/auto-generated-man-pages/${script_name}.8"
-    sed -i'' "s/default_date/$(date +%Y-%m-%d)/" "${toplevel}/auto-generated-man-pages/${script_name}.8"
+    for file in "${toplevel}"/usr/bin/*; do
+      test -f "${file}" || return
+      file_name="${file##*/}"
+      script_version="$("${toplevel}/usr/bin/${file_name}" -V)"
+      pandoc -s -f markdown-smart -V header="Tor System Manager's Manual" -V footer="${script_version}" -t man "${toplevel}/man/${file_name}.8.md" -o "${toplevel}/auto-generated-man-pages/${file_name}.8"
+      sed -i'' "s/default_date/$(date +%Y-%m-%d)/" "${toplevel}/auto-generated-man-pages/${file_name}.8"
+    done
   ;;
 
   check)
