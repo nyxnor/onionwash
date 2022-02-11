@@ -109,8 +109,9 @@ fi
 ## file is the first argument, replace '.' and '-' for '_'.
 file_name="$(printf %s"${file##*/}" | tr "." "_" | tr "-" "_")"
 
-command -v m4 >/dev/null || error_msg "Dependency missing: m4"
-file_name_tmp="$(printf %s"mkstemp(${file_dir}/${file_name}.XXXXXX)" | m4)"
+#command -v m4 >/dev/null || error_msg "Dependency missing: m4"
+#file_name_tmp="$(printf %s"mkstemp(${file_dir}/${file_name}.XXXXXX)" | m4)"
+file_name_tmp="$(mktemp "${file_dir}/${file_name}.XXXXXX")"
 chmod "${file_mode}" "${file_name_tmp}"
 [ -f "${file}" ] && cp -p "${file}" "${file_name_tmp}"
 
