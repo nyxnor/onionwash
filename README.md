@@ -73,24 +73,45 @@ sudo rm -f ../onion-wash_*.deb ../onion-wash_*.buildinfo ../onion-wash_*.changes
 
 ## Usage
 
+### vitor
+
 onion-wash must be run as root if the configuration folder is owned by root, but in the case the configuration folder is owned by the tor user, you must run onion-wash as the tor user.
 
 ```sh
-sudo onion-wash
-sudo -u debian-tor onion-wash
+sudo vitor
+sudo -u debian-tor vitor
 ```
 
 Edit the default tor configuration file /etc/tor/torrc:
 ```sh
-sudo onion-wash
+sudo vitor
 ```
 
 Edit configuration file that does not contain the *User* option set:
 ```sh
-sudo onion-wash -u debian-tor
+sudo vitor -u debian-tor
 ```
 
 Edit an alternative configuration file:
 ```sh
-sudo onion-wash -u debian-tor /usr/local/etc/tor/torrc.d/50_user.conf
+sudo vitor -u debian-tor /usr/local/etc/tor/torrc.d/50_user.conf
+```
+
+### onion-parser
+
+onion-parser must be run as root and the tor configuration files included must have the *User* option set.
+
+Run onion-parser:
+```sh
+sudo onion-parser
+```
+
+See how the files are parsed:
+```sh
+sudo onion-parser -v
+```
+
+Include comments when parsing files:
+```sh
+sudo onion-parser -vv
 ```
