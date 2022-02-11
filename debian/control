@@ -1,25 +1,23 @@
 ## Copyright (C) 2012 - 2020 ENCRYPTED SUPPORT LP <adrelanos@riseup.net>
 ## See the file COPYING for copying conditions.
 
-Source: vitor
+Source: onion-wash
 Section: misc
 Priority: optional
-Maintainer: nyxnor <nyxnor@protonmail.com>
+Maintainer: Patrick Schleizer <adrelanos@whonix.org>
 Build-Depends: debhelper (>= 13), debhelper-compat (= 13),
 Homepage: https://2019.www.torproject.org/docs/tor-manual.html.en
-Vcs-Browser: https://github.com/nyxnor/vitor
-Vcs-Git: https://github.com/nyxnor/vitor.git
+Vcs-Browser: https://github.com/nyxnor/onion-wash
+Vcs-Git: https://github.com/nyxnor/onion-wash.git
 Standards-Version: 4.5.1
 Rules-Requires-Root: no
 
-Package: vitor
+Package: onion-wash
 Architecture: all
-Depends: tor, m4, ${misc:Depends}
-Description: Vi for Tor configuration files
- Wrapper to edit tor configuration files in a safe manner, by creating
- a copy of the file, modifying the temporary copy, opening it with your
- favorite editor, verifying the configuration and saving if it was parsed
- correctly.
+Depends: tor, ${misc:Depends}
+Description: Onion-Wash to sanitize tor configuration files
+ Wrapper aroung tor option --verify config to parse configuration files
+ and verify if they are valid.
  .
  https://2019.www.torproject.org/docs/tor-manual.html.en
  .

@@ -1,8 +1,18 @@
-# vitor - safely edit tor configuration files
+# Onion-Wash - sanitize tor configuration files
+
+If you don't clean your onions, you might only see half of a worm after a bite.
+
+## onion-parser
+
+Wrapper aroung tor option --verify config to parse configuration files and verify if they are valid.
+
+Also shows the order the files were parsed and their options if being verbose.
+
+## vitor- safely edit tor configuration files
 
 [![demo](https://asciinema.org/a/463445.svg)](https://asciinema.org/a/463445?autoplay=1)
 
-## Architecture
+### Architecture
 
 Vitor is a Vi for tor configuration files to be edited in a save manner. It creates a copy of the file you wish to edit, lock the file from being edited in another instance.
 
@@ -44,7 +54,7 @@ dpkg-buildpackage -b
 The package can be found in the parent folder.
 Install the package:
 ```sh
-sudo dpkg -i ../vitor_*.deb
+sudo dpkg -i ../onion-wash_*.deb
 ```
 
 #### Clean up
@@ -54,34 +64,34 @@ Delete temporary debhelper files in package source folder as well as debhelper a
 sudo rm -rf *-build-deps_*.buildinfo *-build-deps_*.changes \
 debian/*.debhelper.log debian/*.substvars \
 debian/.debhelper debian/files \
-debian/debhelper-build-stamp debian/vitor
+debian/debhelper-build-stamp debian/onion-wash
 ```
 
 Delete debhelper artifacts from the parent folder (including the .deb file):
 ```sh
-sudo rm -f ../vitor_*.deb ../vitor_*.buildinfo ../vitor_*.changes
+sudo rm -f ../onion-wash_*.deb ../onion-wash_*.buildinfo ../onion-wash_*.changes
 ```
 
 ## Usage
 
-Vitor must be run as root if the configuration folder is owned by root, but in the case the configuration folder is owned by the tor user, you must run vitor as the tor user.
+onion-wash must be run as root if the configuration folder is owned by root, but in the case the configuration folder is owned by the tor user, you must run onion-wash as the tor user.
 
 ```sh
-sudo vitor
-sudo -u debian-tor vitor
+sudo onion-wash
+sudo -u debian-tor onion-wash
 ```
 
 Edit the default tor configuration file /etc/tor/torrc:
 ```sh
-sudo vitor
+sudo onion-wash
 ```
 
 Edit configuration file that does not contain the *User* option set:
 ```sh
-sudo vitor -u debian-tor
+sudo onion-wash -u debian-tor
 ```
 
 Edit an alternative configuration file:
 ```sh
-sudo vitor -u debian-tor /usr/local/etc/tor/torrc.d/50_user.conf
+sudo onion-wash -u debian-tor /usr/local/etc/tor/torrc.d/50_user.conf
 ```
