@@ -32,6 +32,8 @@ temp_folder_cache=$(mktemp)
 
 parser() {
   for abs_path in ${1}; do
+
+    ## unused?
     abs_path_folder=""
     printf '%s\n' "${abs_path}" | grep -q -F "*" && abs_path_folder="${abs_path%/*}"
     if [ -n "${abs_path_folder}" ]; then
@@ -39,6 +41,7 @@ parser() {
     else
       printf '%s\n' "${parsed_files}" | grep -q "^${abs_path}$" && break
     fi
+
     parsed_files="$(printf '%s\n%s\n' "${parsed_files}" "${abs_path}")"
     if test -f "${abs_path}"; then
       base_name="${abs_path##*/}"
@@ -66,8 +69,10 @@ parser() {
             abs_path_origin="${abs_path}"
             line="$(echo "${line}" | awk '{print $2}')"
 
+            include_extension=""
             case "${line}" in
-              */|*/*\**) line_folder="${line%/*}";; ## example: /etc/tor/torrc.d/ /etc/tor/torrc.d/* /etc/tor/torrc.d/*.conf
+              */) line_folder="${line%/*}";; ## example: /etc/tor/torrc.d/
+              */*\**) line_folder="${line%/*}"; include_extension="${line##*/}";; ## example: /etc/tor/torrc.d/* /etc/tor/torrc.d/*.conf
               *) line_folder="${line}";; ## example: /etc/tor/torrc.d
             esac
             test -d "${line_folder}" &&
@@ -81,7 +86,7 @@ parser() {
       done < "${abs_path}"
 
       printf %s"${bold}===> Done parsing file ${abs_path}${nocolor}\n" >> "${temp_verbose_torrc}"
-    elif test -d "${abs_path%/*}"; then
+    elif test -d "${abs_path}"; then
       folder_name="${abs_path}"
       printf %s"${bold}======> Start parsing folder ${folder_name}${nocolor}\n" >> "${temp_verbose_torrc}"
       if [ -n "${abs_path_folder}" ]; then
