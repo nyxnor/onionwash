@@ -32,6 +32,7 @@ temp_folder_cache=$(mktemp)
 
 parser() {
   for abs_path in ${1}; do
+    abs_path_folder=""
     printf '%s\n' "${abs_path}" | grep -q -F "*" && abs_path_folder="${abs_path%/*}"
     if [ -n "${abs_path_folder}" ]; then
       printf '%s\n' "${parsed_files}" | grep -q "^${abs_path_folder}$" && break
@@ -81,8 +82,8 @@ parser() {
 
       printf %s"${bold}===> Done parsing file ${abs_path}${nocolor}\n" >> "${temp_verbose_torrc}"
     elif test -d "${abs_path%/*}"; then
-      folder_name="${abs_path%/*}"
-      printf %s"${bold}===> Start parsing folder ${folder_name}${nocolor}\n" >> "${temp_verbose_torrc}"
+      folder_name="${abs_path}"
+      printf %s"${bold}======> Start parsing folder ${folder_name}${nocolor}\n" >> "${temp_verbose_torrc}"
       if [ -n "${abs_path_folder}" ]; then
         abs_path_expansion="${abs_path}"
       else
@@ -95,7 +96,7 @@ parser() {
         fi
         parser "${fso}"
       done
-      printf %s"${bold}===> Done parsing folder ${folder_name}${nocolor}\n" >> "${temp_verbose_torrc}"
+      printf %s"${bold}======> Done parsing folder ${folder_name}${nocolor}\n" >> "${temp_verbose_torrc}"
     else
      error_msg "invalid file '${abs_path}'"
     fi
