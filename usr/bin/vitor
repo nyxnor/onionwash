@@ -130,7 +130,7 @@ fi
  if [ -f "${file}" ]; then
   [ ! -w "${file}" ] && error_msg "File ${file} is not writable by ${USER}."
   [ ! -r "${file}" ] && error_msg "File ${file} is not readble by ${USER}."
-  tor_user_check="$(grep "^User" "${file}" | sed "s/^User //")"
+  tor_user_check="$(grep "^[[:space:]]*User" "${file}" | sed "s/^[[:space:]]*User //")"
   if [ -n "${tor_user_check}" ] && [ -n "${tor_user}" ] && [ "${tor_user_check}" != "${tor_user}" ]; then
     notice "The tor configuration file contains the user ${tor_user_check}, but you specified the tor user ${tor_user}."
     error_msg "Are you running tor as the correct user?"
@@ -173,7 +173,7 @@ done
 
 check_tor_user(){
   tor_command="tor --verify-config -f ${file_name_tmp}"
-  tor_user_check="$(grep "^User" "${1}" | sed "s/^User //")"
+  tor_user_check="$(grep "^[[:space:]]*User" "${1}" | sed "s/^[[:space:]]*User //")"
   if [ -n "${tor_user_check}" ]; then
     # shellcheck disable=SC2086
     case "${su_cmd}" in
@@ -209,6 +209,27 @@ tor_verify_config(){
   tor_config_parsed="$(printf '%s\n' "${tor_config_parsed}" | grep -e "\[warn\]" -e "\[err\]" -e "Configuration was valid" | grep -v "\[warn\] Tor was compiled with")"
 }
 
+
+save_file(){
+  if ! cmp -s "${file_name_tmp}" "${file}"; then
+    if cp -p "${file_name_tmp}" "${file}"; then
+      notice "${file} updated"
+      exit 0
+    else
+      ## simulate sudoedit precautions:
+      ## If, for some reason, vitor is unable to update a file with its edited version,
+      ## the user will receive a warning and the edited copy will remain in a temporary file.
+      notice "Unable to update '${file}' with '${file_name_tmp}', the temporary copy will persist."
+      trap 'rm -f -- ${file_locked}; exit' EXIT INT TERM
+      exit 1
+    fi
+  else
+    notice "${file} unchanged"
+    exit 0
+  fi
+}
+
+
 ## open temporary file to be edited
 #su -l "${SUDO_USER}" -c "${vitor_editor} ${file_name_tmp}" || true
 #sudo -u "${SUDO_USER}" -E "${vitor_editor}" "${file_name_tmp}" || true
@@ -238,8 +259,8 @@ while printf '%s\n' "${tor_config_parsed}" | grep -q "\[warn\]"; do
     read -r status
     case "${status}" in
       e|E) notice "${file} will be edited again"; break;;
-      x|X) notice "${file} unchanged"; exit;;
-      Q) ! cmp -s "${file_name_tmp}" "${file}" && cp -p "${file_name_tmp}" "${file}" && notice "${file} updated" && exit 0;;
+      x|X) notice "${file} unchanged"; exit 0;;
+      Q) save_file;;
     esac
   done
   "${vitor_editor}" "${file_name_tmp}" || true
@@ -248,18 +269,5 @@ while printf '%s\n' "${tor_config_parsed}" | grep -q "\[warn\]"; do
   printf '\n'
 done
 
-
-if ! cmp -s "${file_name_tmp}" "${file}"; then
-  if cp -p "${file_name_tmp}" "${file}"; then
-    notice "${file} updated" && exit 0
-  else
-    ## simulate sudoedit precautions:
-    ## If, for some reason, vitor is unable to update a file with its edited version,
-    ## the user will receive a warning and the edited copy will remain in a temporary file.
-    notice "Unable to update '${file}' with '${file_name_tmp}', the temporary copy will persist."
-    trap 'rm -f -- ${file_locked}; exit' EXIT INT TERM
-    exit 1
-  fi
-else
-  notice "${file} unchanged" && exit 0
-fi
+## above loop is not run if file does not have issues, so we save it now
+save_file
