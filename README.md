@@ -99,13 +99,14 @@ Edit an alternative configuration file:
 sudo vitor -u debian-tor /usr/local/etc/tor/torrc.d/50_user.conf
 ```
 
-Set environment variables to persist root or debian-tor login:
+Set environment variables for `sudo` to persist root or debian-tor login:
 ```sh
 sudo env VISUAL="mousepad" vitor -u debian-tor
 ## or
 #export VISUAL="mousepad"; sudo -E vitor -u debian-tor
 ```
 
+When using `doas`, set environment variables persist root or debian-tor login by using option `keepenv` for your user on doas.conf.
 ### onion-parser
 
 onion-parser must be run as root and the tor configuration files included must have the *User* option set.

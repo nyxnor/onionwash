@@ -29,9 +29,7 @@ vitor_version="0.0.1"
 ## display error message with instructions to use the script correctly.
 notice(){ printf %s"${me}: ${1}\n" 1>&2; }
 error_msg(){ notice "${1}"; exit 1; }
-usage(){ printf '%s\n' "Usage: [sudo|doas] ${me} [-f tor_conf] [-u tor_user]
-Note:
-  ${me}               run ${me} as the root user with 'sudo' or 'doas'
+usage(){ printf '%s\n' "Usage: ${me} [-V] [--getopt] [-u USER] [[-f] FILE]
 
 Options:
   -f, --file FILE     tor configuration file file, if 'FILE' is not set, default to /etc/tor/torrc
@@ -86,6 +84,7 @@ while :; do
   shift "${shift_n:-1}"
 done
 
+[ -z "${file}" ] && file="${1}"
 
 ## whonix has a specific file for user modifications
 [ -f /usr/share/whonix/marker ] && whonix_conf="/usr/local/etc/torrc.d/50_user.conf"
@@ -105,7 +104,6 @@ file_dir="${file%/*}"
 ## get editor. First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR,
 ## if still empty, try the default editor specified by the command editor, them Vi for unix
 ## later try common terminal commands
-
 # shellcheck disable=SC2154
 editor_programs="editor vi vim nvim nano pico emacs mg"
 for e in ${editor_programs}; do
@@ -146,14 +144,20 @@ fi
 fi
 
 
-## file is the first argument, replace '.' and '-' for '_'.
-file_name="$(printf %s"${file##*/}" | tr "." "_" | tr "-" "_")"
+## temporary directory to save the tmp file
+tmp_dir="/var/tmp"
+test -d "${tmp_dir}" || tmp_dir="/tmp"
+test -d "${tmp_dir:="${TMPDIR}"}" || error_msg "Failed to find temporary directory: ${tmp_dir}"
+#tmp_dir="${file_dir}"
 
-file_name_tmp="$(mktemp "${file_dir}/${file_name}.XXXXXX")"
+## get only file name, not path
+file_name="${file##*/}"
+
+file_name_tmp="$(mktemp "${tmp_dir}/${file_name}.XXXXXX")"
 chmod "${file_mode}" "${file_name_tmp}"
-[ -f "${file}" ] && cp -p "${file}" "${file_name_tmp}"
+[ -f "${file}" ] && cp "${file}" "${file_name_tmp}"
 
-file_locked="${file}.lck"
+file_locked="${tmp_dir}/${file_name}.lck"
 ## test if file is already in use.
 trap 'rm -f -- ${file_name_tmp}; exit' EXIT INT TERM
 if ln "${file_name_tmp}" "${file_locked}"; then
@@ -208,6 +212,9 @@ tor_verify_config(){
 }
 
 ## open temporary file to be edited
+#su -l "${SUDO_USER}" -c "${vitor_editor} ${file_name_tmp}" || true
+#sudo -u "${SUDO_USER}" -E "${vitor_editor}" "${file_name_tmp}" || true
+#sudo -u "${DOAS_USER}" "${vitor_editor}" "${file_name_tmp}" || true
 "${vitor_editor}" "${file_name_tmp}" || true
 check_tor_user "${file_name_tmp}"
 
