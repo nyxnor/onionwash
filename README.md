@@ -79,38 +79,28 @@ sudo rm -f ../onion-wash_*.deb ../onion-wash_*.buildinfo ../onion-wash_*.changes
 
 ### vitor
 
-onion-wash must be run as root if the configuration folder is owned by root, but in the case the configuration folder is owned by the tor user, you must run onion-wash as the tor user.
+vitor must not be run as root, in the case of a GUI editor, it would be catastrophic. Instead, the script will only do the necessary tasks as root using `sudo` or `doas`, edit the file as the normal user.
 
 If no file is provided on the command line, it autodetects your tor configuration file if using [OnionJuggler](https://github.com/nyxnor/onionjuggler) or [Whonix](https://whonix.org).
 
+Edit the default tor configuration file /etc/tor/torrc (On Whonix: /usr/local/etc/tor/torrc.d/50_user.conf)
 ```sh
-sudo vitor
-sudo -u debian-tor vitor
+vitor
 ```
 
-Edit the default tor configuration file /etc/tor/torrc:
+Edit any tor configuration file:
 ```sh
-sudo vitor
+vitor -f /usr/share/tor/tor-services-defaults/torrc
 ```
 
-Edit configuration file that does not contain the *User* option set:
-```sh
-sudo vitor -u debian-tor
-```
-
-Edit an alternative configuration file:
-```sh
-sudo vitor -u debian-tor /usr/local/etc/tor/torrc.d/50_user.conf
-```
-
-Set environment variables for `sudo` to persist root or debian-tor login:
+#Set environment variables for `sudo` to persist root or debian-tor login:
 ```sh
 sudo env VISUAL="mousepad" vitor -u debian-tor
 ## or
 #export VISUAL="mousepad"; sudo -E vitor -u debian-tor
 ```
 
-When using `doas`, set environment variables persist root or debian-tor login by using option `keepenv` for your user on doas.conf.
+#When using `doas`, set environment variables persist root or debian-tor login by using option `keepenv` for your user on doas.conf.
 ### onion-parser
 
 onion-parser must be run as root and the tor configuration files included must have the *User* option set.
