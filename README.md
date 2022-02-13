@@ -97,6 +97,11 @@ Edit an alternative configuration file:
 sudo vitor -u debian-tor /usr/local/etc/tor/torrc.d/50_user.conf
 ```
 
+Set environment variables to persist root or debian-tor login:
+```sh
+sudo env VISUAL="mousepad" vitor -u debian-tor
+```
+
 ### onion-parser
 
 onion-parser must be run as root and the tor configuration files included must have the *User* option set.
