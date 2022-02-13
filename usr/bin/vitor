@@ -130,7 +130,7 @@ fi
  if [ -f "${file}" ]; then
   [ ! -w "${file}" ] && error_msg "File ${file} is not writable by ${USER}."
   [ ! -r "${file}" ] && error_msg "File ${file} is not readble by ${USER}."
-  tor_user_check="$(grep "^[[:space:]]*User" "${file}" | sed "s/^[[:space:]]*User //")"
+  tor_user_check="$(grep "^[[:space:]]*User" "${file}" | sed "s/^[[:space:]]*User //" | tr -d " ")"
   if [ -n "${tor_user_check}" ] && [ -n "${tor_user}" ] && [ "${tor_user_check}" != "${tor_user}" ]; then
     notice "The tor configuration file contains the user ${tor_user_check}, but you specified the tor user ${tor_user}."
     error_msg "Are you running tor as the correct user?"
@@ -173,7 +173,7 @@ done
 
 check_tor_user(){
   tor_command="tor --verify-config -f ${file_name_tmp}"
-  tor_user_check="$(grep "^[[:space:]]*User" "${1}" | sed "s/^[[:space:]]*User //")"
+  tor_user_check="$(grep "^[[:space:]]*User" "${1}" | sed "s/^[[:space:]]*User //" | tr -d " ")"
   if [ -n "${tor_user_check}" ]; then
     # shellcheck disable=SC2086
     case "${su_cmd}" in
