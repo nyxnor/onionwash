@@ -21,6 +21,10 @@ After the file is edited and the user exits the editor, tor verify its configura
 
 ## Installation
 
+### Requirements
+
+All scripts requires the `tor` program, but vitor also requires an program to run as another user, specifically `sudo` or `doas`.
+
 ### How to install on any unix system
 
 Install the script and the manual:

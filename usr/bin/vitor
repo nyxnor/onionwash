@@ -8,7 +8,7 @@
 ## Intrinsic dependency is some kind of text editor: vi, vim, nvim, nano, pico, emacs
 ## Dependencides that can be minimized if your mktemp is extended over POSIX: m4
 
-file_mode="644"
+#file_mode="644"
 me="${0##*/}"
 vitor_version="0.0.1"
 
@@ -103,7 +103,7 @@ done
 file="${file%*/}"
 
 ## get just the directory
-file_dir="${file%/*}"
+#file_dir="${file%/*}"
 
 ## get editor. First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR,
 ## if still empty, try the default editor specified by the command editor, them Vi for unix
