@@ -14,7 +14,7 @@ Rules-Requires-Root: no
 
 Package: onion-wash
 Architecture: all
-Depends: tor, ${misc:Depends}
+Depends: tor, sudo, ${misc:Depends}
 Description: Onion-Wash to sanitize tor configuration files
  Wrapper aroung tor option --verify config to parse configuration files
  and verify if they are valid.
