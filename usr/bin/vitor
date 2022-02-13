@@ -10,7 +10,7 @@
 
 file_mode="644"
 me="${0##*/}"
-
+vitor_version="0.0.1"
 [ "$(id -u)" -eq 0 ] && is_root=1
 
 ## colors
@@ -34,10 +34,15 @@ Note:
   ${me}               run ${me} as the root user with 'sudo' or 'doas'
 
 Options:
-  -f tor_conf         if 'tor_conf' is not set, default to /etc/tor/torrc
+  -f, --file FILE     tor configuration file file, if 'FILE' is not set, default to /etc/tor/torrc
                       if the file doesn't exist, will create it after passing all tests.
-  -u tor_user         if 'tor_user' is not set, the tor_conf must contain the \"User\" option
-                      else it tor fails to validate the configuration"
+
+  -u, --user USER     tor user, if 'USER' is not set, the tor_conf must contain the \"User\" option
+                      else it tor fails to validate the configuration
+
+  --getopt            get command line options and exit
+
+  -V, --version       print version number and exit"
   exit 1
 }
 
@@ -48,20 +53,54 @@ has() {
   [ -x "${_cmd}" ] || return 1
 }
 
-vitor_version="0.0.1"
+get_arg(){
+  case "${arg}" in ""|-*) error_msg "Option '${opt_orig}' requires an argument.";; esac
+  value="${arg}"
+  eval "${1}"="\"${value}\""
+  [ -z "${shift_n}" ] && shift_n=2
+}
 
-[ -n "${1}" ] && [ -z "${2}" ] && tor_conf="${1}"
+## empty variable
+file=""
+
 while :; do
-  case "${1}" in
-    "") break;;
-    --) shift 1; break;;
-    -h) usage;;
-    -u) get_arg "${1}" "${2}"; tor_user="${2}"; shift 2;;
-    -f) get_arg "${1}" "${2}"; tor_conf="${2}"; shift 2;;
-    -V) printf '%s\n' "vitor ${vitor_version}"; exit 0;;
-    *) tor_conf="${1}"; break;;
+  shift_n=""
+  opt_orig="${1}" ## save opt orig for error message to understand which opt failed
+  case "${opt_orig}" in
+    --) shift 1; break;; ## stop option parsing
+    --*=*) opt="${1%=*}"; opt="${opt#*--}"; arg="${1#*=}"; shift_n=1;; ## long option '--sleep=1'
+    -*=*) opt="${1%=*}"; opt="${opt#*-}"; arg="${1#*=}"; shift_n=1;; ## short option '-s=1'
+    --*) opt="${1#*--}"; arg="${2}";; ## long option '--sleep 1'
+    -*) opt="${1#*-}"; arg="${2}";; ## short option '-s 1'
+    "") break;; ## options ended
+    *) file="${opt}"; break;; ## not an option, but editor options are the file directly
   esac
+  case "${opt}" in
+    u|u=*|user|user=*) get_arg tor_user;;
+    f|f=*|file|file=*) get_arg file;;
+    V|version) printf '%s\n' "vitor ${vitor_version}"; exit 0;;
+    getopt|getopts) getopt=1;;
+    h|help) usage;;
+    *) usage;;
+  esac
+  shift "${shift_n:-1}"
 done
+
+
+## whonix has a specific file for user modifications
+[ -f /usr/share/whonix/marker ] && whonix_conf="/usr/local/etc/torrc.d/50_user.conf"
+
+## this is the default file reads. Getting the last option because the first can be the default torrc.
+#tor_conf_fallback="$(tor --verify-config | grep "Read configuration file" | tail -n -1 | sed "s|.*Read configuration file \"||;s|\"\.||")"
+
+## get file provided on the command line (file), if empty, onionjuggler.conf variable (tor_conf), if empty,
+## try whonix user configuration file (whonix_conf), if empty, fallback to default torrc
+: "${file:="${tor_conf:-"${whonix_conf:-"/etc/tor/torrc"}"}"}"
+## remove last backlash if inserted by mistake
+file="${file%*/}"
+
+## get just the directory
+file_dir="${file%/*}"
 
 ## get editor. First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR,
 ## if still empty, try the default editor specified by the command editor, them Vi for unix
@@ -78,13 +117,14 @@ case "${vitor_editor##*/}" in
   *sudoedit|*doasedit) error_msg "${vitor_editor##*/} is not allowed to be used with Vitor because of its properties";;
 esac
 
-## get first argument, if empty, onionjuggler.conf variable, if empty, fallback to default torrc
-file="${tor_conf:-"/etc/tor/torrc"}"
-## remove last backlash if inserted by mistake
-file="${file%*/}"
-
-## get just the directory
-file_dir="${file%/*}"
+## get options and exit
+if [ "${getopt}" = "1" ]; then
+  for key in file tor_user vitor_editor; do
+    eval val='$'"${key}"
+    [ -n "${val}" ] && printf '%s\n' "${key}=\"${val}\""
+  done
+  exit 0
+fi
 
 ## check permissions
 [ ! -d "${file_dir}" ] && error_msg "${file_dir} is not a directory or doesn't exist."
@@ -104,6 +144,7 @@ file_dir="${file%/*}"
     error_msg "$ ${me} -u tor_user"
   fi
 fi
+
 
 ## file is the first argument, replace '.' and '-' for '_'.
 file_name="$(printf %s"${file##*/}" | tr "." "_" | tr "-" "_")"
@@ -202,4 +243,18 @@ while printf '%s\n' "${tor_config_parsed}" | grep -q "\[warn\]"; do
   printf '\n'
 done
 
-! cmp -s "${file_name_tmp}" "${file}" && cp -p "${file_name_tmp}" "${file}" && notice "${file} updated" && exit 0
+
+if ! cmp -s "${file_name_tmp}" "${file}"; then
+  if cp -p "${file_name_tmp}" "${file}"; then
+    notice "${file} updated" && exit 0
+  else
+    ## simulate sudoedit precautions:
+    ## If, for some reason, vitor is unable to update a file with its edited version,
+    ## the user will receive a warning and the edited copy will remain in a temporary file.
+    notice "Unable to update '${file}' with '${file_name_tmp}', the temporary copy will persist."
+    trap 'rm -f -- ${file_locked}; exit' EXIT INT TERM
+    exit 1
+  fi
+else
+  notice "${file} unchanged" && exit 0
+fi
