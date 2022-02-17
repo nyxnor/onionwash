@@ -241,7 +241,7 @@ edit_check_verify(){
   #su -l "${SUDO_USER}" -c "${vitor_editor} ${file_name_tmp}" || true
   #sudo -u "${SUDO_USER}" -E "${vitor_editor}" "${file_name_tmp}" || true
   #sudo -u "${DOAS_USER}" "${vitor_editor}" "${file_name_tmp}" || true
-  "${vitor_editor}" "${file_name_tmp}" || true
+  "${vitor_editor}" "${file_name_tmp}" 2>/dev/null || true
   verify_tor
   ## while the config is not ok, loop to enter and continue to edit or signal to interrupt.
   tor_verify_config
