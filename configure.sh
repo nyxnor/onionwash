@@ -49,7 +49,7 @@ case "${1}" in
       if [ -d "${mandir}" ]; then
         for man in "${toplevel}"/auto-generated-man-pages/*; do
           manual="${toplevel}/auto-generated-man-pages/${man##*/}"
-          [ -f "${manual}" ] && cp "${manual}" "${mandir}" && break
+          [ -f "${manual}" ] && cp "${manual}" "${mandir}"
         done
       fi
     done
