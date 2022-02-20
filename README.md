@@ -16,8 +16,7 @@ Then it selects the editor by looking the environment variables *SUDO_EDITOR*, *
 
 After the file is edited and the user exits the editor, tor verify its configuration file but only from the modified file, if invalid, give option to edit again, exit without saving or save with danger flag.
 
-
-[![demo](https://asciinema.org/a/463445.svg)](https://asciinema.org/a/463445?autoplay=1)
+[![asciicast](https://asciinema.org/a/470389.svg)](https://asciinema.org/a/470389)
 
 ## Installation
 
