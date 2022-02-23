@@ -82,7 +82,7 @@ vitor must not be run as root, in the case of a GUI editor, it would be catastro
 
 If no file is provided on the command line, it autodetects your tor configuration file if using [OnionJuggler](https://github.com/nyxnor/onionjuggler) or [Whonix](https://whonix.org).
 
-Edit the default tor configuration file /etc/tor/torrc (On Whonix: /usr/local/etc/tor/torrc.d/50_user.conf)
+Edit the user tor configuration file /etc/tor/torrc (On Whonix: /usr/local/etc/tor/torrc.d/50_user.conf)
 ```sh
 vitor
 ```
