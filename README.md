@@ -1,4 +1,4 @@
-# Onion-Wash - sanitize tor configuration files
+# OnionWash - sanitize tor configuration files
 
 If you don't clean your onions, you might only see half of a worm after a bite.
 
@@ -56,7 +56,7 @@ dpkg-buildpackage -b --no-sign
 The package can be found in the parent folder.
 Install the package:
 ```sh
-sudo dpkg -i ../onion-wash_*.deb
+sudo dpkg -i ../onionwash_*.deb
 ```
 
 #### Clean up
@@ -66,12 +66,12 @@ Delete temporary debhelper files in package source folder as well as debhelper a
 sudo rm -rf *-build-deps_*.buildinfo *-build-deps_*.changes \
 debian/*.debhelper.log debian/*.substvars \
 debian/.debhelper debian/files \
-debian/debhelper-build-stamp debian/onion-wash
+debian/debhelper-build-stamp debian/onionwash
 ```
 
 Delete debhelper artifacts from the parent folder (including the .deb file):
 ```sh
-sudo rm -f ../onion-wash_*.deb ../onion-wash_*.buildinfo ../onion-wash_*.changes
+sudo rm -f ../onionwash_*.deb ../onionwash_*.buildinfo ../onionwash_*.changes
 ```
 
 ## Usage
@@ -92,11 +92,10 @@ Edit any tor configuration file:
 vitor -f /usr/share/tor/tor-services-defaults/torrc
 ```
 
-#Set environment variables for `sudo` to persist root or debian-tor login:
+Set your editor with the variable `VISUAL`:
 ```sh
-sudo env VISUAL="mousepad" vitor -u debian-tor
-## or
-#export VISUAL="mousepad"; sudo -E vitor -u debian-tor
+export VISUAL="mousepad"
+vitor
 ```
 
 #When using `doas`, set environment variables persist root or debian-tor login by using option `keepenv` for your user on doas.conf.

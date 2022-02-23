@@ -2,7 +2,7 @@
 
 me="${0##*/}"
 toplevel="$(git rev-parse --show-toplevel)"
-package_name="onion-wash"
+package_name="onionwash"
 requirements="tor"
 
 error_msg(){
