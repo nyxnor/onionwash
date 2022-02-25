@@ -91,7 +91,7 @@ done
 [ "$(id -u)" -eq 0 ] && error_msg "Don't run ${me} as root."
 
 ## whonix has a specific file for user modifications
-[ -f /usr/share/whonix/marker ] && whonix_conf="/usr/local/etc/torrc.d/50_user.conf"
+[ -f /usr/share/anon-gw-base-files/gateway ] && whonix_conf="/usr/local/etc/torrc.d/50_user.conf"
 
 ## this is the default file reads. Getting the last option because the first can be the default torrc.
 #tor_conf_fallback="$(tor --verify-config | grep "Read configuration file" | tail -n -1 | sed "s|.*Read configuration file \"||;s|\"\.||")"
@@ -101,9 +101,30 @@ done
 : "${file:="${tor_conf:-"${whonix_conf:-"/etc/tor/torrc"}"}"}"
 ## remove last backlash if inserted by mistake
 file="${file%*/}"
+if test -e "${file}" && ! test -f "${file}"; then
+  notice "${file} is not a regular file"
+  if test -b "${file}"; then
+    error_msg "File to be edited can't be a block special file"
+  elif test -c "${file}"; then
+    error_msg "File to be edited can't be a character special file"
+  elif test -d "${file}"; then
+    error_msg "File to be edited can't be a directory"
+  elif test -h "${file}"; then
+    error_msg "File to be edited can't be a symbolic link"
+  elif test -p "${file}"; then
+    error_msg "File to be edited can't be a named pipe"
+  elif test -t "${file}"; then
+    error_msg "File to be edited can't be an open file descriptor"
+  elif test -S "${file}"; then
+    error_msg "File to be edited can't be a socket"
+  fi
+  ## just to make sure to catch a non-regular file
+  exit 1
+fi
 
 ## get just the directory
-#file_dir="${file%/*}"
+file_dir="${file%/*}"
+test -d "${file_dir}" || error_msg "${file_dir} directory does not exist"
 
 ## get editor. First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR,
 ## if still empty, try the default editor specified by the command editor, them Vi for unix
