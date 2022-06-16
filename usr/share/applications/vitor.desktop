@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Exec=sh -c 'vitor; printf "\nFeel free to close this window\n"; sleep infinity'
+Terminal=true
+Name=Vitor
+GenericName=Vitor
+Comment=Vitor
+Categories=System
+Icon=/usr/share/icons/icon-pack-dist/nyx.ico
+Keywords=system;tor;config;torrc
