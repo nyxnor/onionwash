@@ -1,4 +1,4 @@
-# Onion-Wash - sanitize tor configuration files
+# OnionWash - sanitize tor configuration files
 
 If you don't clean your onions, you might only see half of a worm after a bite.
 
@@ -16,8 +16,7 @@ Then it selects the editor by looking the environment variables *SUDO_EDITOR*, *
 
 After the file is edited and the user exits the editor, tor verify its configuration file but only from the modified file, if invalid, give option to edit again, exit without saving or save with danger flag.
 
-
-[![demo](https://asciinema.org/a/463445.svg)](https://asciinema.org/a/463445?autoplay=1)
+[![asciicast](https://asciinema.org/a/470389.svg)](https://asciinema.org/a/470389)
 
 ## Installation
 
@@ -57,7 +56,7 @@ dpkg-buildpackage -b --no-sign
 The package can be found in the parent folder.
 Install the package:
 ```sh
-sudo dpkg -i ../onion-wash_*.deb
+sudo dpkg -i ../onionwash_*.deb
 ```
 
 #### Clean up
@@ -67,12 +66,12 @@ Delete temporary debhelper files in package source folder as well as debhelper a
 sudo rm -rf *-build-deps_*.buildinfo *-build-deps_*.changes \
 debian/*.debhelper.log debian/*.substvars \
 debian/.debhelper debian/files \
-debian/debhelper-build-stamp debian/onion-wash
+debian/debhelper-build-stamp debian/onionwash
 ```
 
 Delete debhelper artifacts from the parent folder (including the .deb file):
 ```sh
-sudo rm -f ../onion-wash_*.deb ../onion-wash_*.buildinfo ../onion-wash_*.changes
+sudo rm -f ../onionwash_*.deb ../onionwash_*.buildinfo ../onionwash_*.changes
 ```
 
 ## Usage
@@ -83,7 +82,7 @@ vitor must not be run as root, in the case of a GUI editor, it would be catastro
 
 If no file is provided on the command line, it autodetects your tor configuration file if using [OnionJuggler](https://github.com/nyxnor/onionjuggler) or [Whonix](https://whonix.org).
 
-Edit the default tor configuration file /etc/tor/torrc (On Whonix: /usr/local/etc/tor/torrc.d/50_user.conf)
+Edit the user tor configuration file /etc/tor/torrc (On Whonix: /usr/local/etc/tor/torrc.d/50_user.conf)
 ```sh
 vitor
 ```
@@ -93,11 +92,10 @@ Edit any tor configuration file:
 vitor -f /usr/share/tor/tor-services-defaults/torrc
 ```
 
-#Set environment variables for `sudo` to persist root or debian-tor login:
+Set your editor with the variable `VISUAL`:
 ```sh
-sudo env VISUAL="mousepad" vitor -u debian-tor
-## or
-#export VISUAL="mousepad"; sudo -E vitor -u debian-tor
+export VISUAL="mousepad"
+vitor
 ```
 
 #When using `doas`, set environment variables persist root or debian-tor login by using option `keepenv` for your user on doas.conf.
