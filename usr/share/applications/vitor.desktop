@@ -1,3 +1,11 @@
+#### meta start
+#### project Whonix
+#### category tor and usability
+#### gateway_only yes
+#### description
+## Vitor - Edit tor configuration files safely - desktop file for start menu
+#### meta end
+
 [Desktop Entry]
 Type=Application
 Exec=sh -c 'vitor; printf "\nFeel free to close this window\n"; sleep infinity'
